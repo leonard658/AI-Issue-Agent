@@ -1,0 +1,7 @@
+openai
+langchain
+langchain-astradb
+langchain-openai
+langchainhub
+requests
+python-dotenv
