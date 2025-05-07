@@ -33,6 +33,46 @@ def clone_repo(repo_url: str, branch: str, target_dir: str):
 # Example usage:
 # clone_repo("https://github.com/leonard658/mlb-predictions-frontend", "main", "mlb-predictions-frontend")
 
+def load_text_documents(repo_path: str) -> list[Document]:
+    """
+    Recursively load *all* files in `repo_path`, but only keep
+    the ones we can successfully decode as UTF-8 text.
+    """
+    docs: list[Document] = []
+    root = Path(repo_path)
+
+    for file_path in root.rglob("*"):
+        if not file_path.is_file():
+            continue
+
+        # read raw bytes
+        raw = file_path.read_bytes()
+
+        # simple binary check: if you see a NULL byte, skip it
+        if b"\x00" in raw:
+            continue
+
+        # try to decode as UTF-8 (you can try other encodings or chardet here)
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+
+        # build metadata
+        rel = file_path.relative_to(root).as_posix()
+        docs.append(
+            Document(
+                page_content=text,
+                metadata={
+                    "source": str(file_path),
+                    "file_path": rel,
+                    "language": file_path.suffix.lstrip("."),  # e.g. "py", "cfg", "toml", "env"
+                },
+            )
+        )
+
+    return docs
+
 # May need to add token length checking to make sure that the LLM can handle all of the documents
 def load_code_documents(repo_path: str) -> list[Document]:
     """
