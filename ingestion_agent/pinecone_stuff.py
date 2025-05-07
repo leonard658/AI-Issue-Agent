@@ -2,324 +2,251 @@ from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from llama_index.core.node_parser import CodeSplitter
 from langchain.schema import Document
-from google import genai
-from google.genai import types
-import time
-from google.genai.errors import ClientError
 import os
+from openai import OpenAI
+import tiktoken
 
 # Link to the supported languages pack: https://github.com/Goldziher/tree-sitter-language-pack?tab=readme-ov-file#available-languages
 # Languages that are currently supported for this: 
-# C, C++, C#, CSS, Go, HTML, Java, JavaScript, Perl, PHP, Python, Ruby, Rust, Swift, TypeScript
+# C, C++, C#, CSS, Go, HTML, Java, JavaScript, Perl, PHP, Python, Ruby, Rust, Swift, TypeScript, and miscellaneous file types like JSON, CSV, YAML, XML, and shell scripts.
 suported_languages_mapped = {
-    # Python
-    'py':   'python',
-    'ipynb':'python',
-    'pyi':  'python',
-    'pyc':  'python',
-    'pyo':  'python',
-    'pyw':  'python',
-    'pyx':  'python',
-    'pxd':  'python',
-    'pyd':  'python',
-    'pyz':  'python',
-    # Typescript
-    'ts':           'typescript',
-    'tsx':          'typescript',
-    'd.ts':         'typescript',
-    'mts':          'typescript',
-    'cts':          'typescript',
-    'tsbuildinfo':  'typescript',
+     # Python
+    'py':     'python',
+    'pyw':    'python',
+    'pyi':    'python',
+    'ipynb':  'python',
+    'pyx':    'python',
+    'pxd':    'python',
+
+    # TypeScript
+    'ts':     'typescript',
+    'tsx':    'typescript',
+
     # JavaScript
-    'js':      'javascript',
-    'mjs':     'javascript',
-    'cjs':     'javascript',
-    'jsx':     'javascript',
-    'json':    'javascript',
-    'min.js':  'javascript',
-    'node':    'javascript',
-    'map':     'javascript',
-    'es6':     'javascript',
-    'es':      'javascript',
+    'js':     'javascript',
+    'mjs':    'javascript',
+    'cjs':    'javascript',
+    'jsx':    'javascript',
+
     # Java
-    'java':  'java',
-    'class': 'java',
-    'jar':   'java',
-    'war':   'java',
-    'ear':   'java',
-    'jmod':  'java',
-    'jsp':   'java',
-    'jspx':  'java',
-    'jnlp':  'java',
-    'jad':   'java',
+    'java':   'java',
+
     # Go
-    'go':      'go',
-    'mod':     'go',
-    'sum':     'go',
-    'test.go': 'go',
-    'tmpl':    'go',
-    'tpl':     'go',
-    'gohtml':  'go',
+    'go':     'go',
+
     # C
-    'c':   'c',
-    'h':   'c',
-    'i':   'c',
-    'o':   'c',
-    'a':   'c',
-    'so':  'c',
-    'dll': 'c',
+    'c':      'c',
+    'h':      'c',
+
     # C++
-    'cpp':  'cpp',
-    'cc':   'cpp',
-    'cxx':  'cpp',
-    'C':    'cpp',
-    'h':    'cpp',
-    'hpp':  'cpp',
-    'hh':   'cpp',
-    'hxx':  'cpp',
-    'ii':   'cpp',
-    'o':    'cpp',
-    'a':    'cpp',
-    'so':   'cpp',
-    'dll':  'cpp',
+    'cpp':    'cpp',
+    'cc':     'cpp',
+    'cxx':    'cpp',
+    'hpp':    'cpp',
+
     # C#
-    'cs':       'csharp',
-    'csproj':   'csharp',
-    'sln':      'csharp',
-    'dll':      'csharp',
-    'exe':      'csharp',
-    'config':   'csharp',
-    'resx':     'csharp',
-    'cshtml':   'csharp',
-    'razor':    'csharp',
-    'xaml':     'csharp',
-    'csx':      'csharp',
-    'nuspec':   'csharp',
+    'cs':     'csharp',
+
     # HTML
-    'html':  'html',
-    'htm':   'html',
-    'xhtml': 'html',
-    'shtml': 'html',
-    'mhtml': 'html',
-    'phtml': 'html',
-    'dhtml': 'html',
+    'html':   'html',
+    'htm':    'html',
+    'xhtml':  'html',
+    'shtml':  'html',
+
     # CSS
-    'css':     'css',
-    'scss':    'css',
-    'sass':    'css',
-    'less':    'css',
-    'styl':    'css',
-    'pcss':    'css',
-    'postcss': 'css',
+    'css':    'css',
+    'scss':   'css',
+    'sass':   'css',
+    'less':   'css',
+    'styl':   'css',
+
     # PHP
-    'php':   'php',
-    'phtml': 'php',
-    'php3':  'php',
-    'php4':  'php',
-    'php5':  'php',
-    'inc':   'php',
-    'phar':  'php',
-    'phps':  'php',
-    'phpt':  'php',
+    'php':    'php',
+    'phtml':  'php',
+
     # Ruby
-    'rb':       'ruby',
-    'erb':      'ruby',
-    'rake':     'ruby',
-    'gemspec':  'ruby',
-    'ru':       'ruby',
-    'gem':      'ruby',
-    'rbw':      'ruby',
+    'rb':     'ruby',
+    'erb':    'ruby',
+
     # Rust
-    'rs':           'rust',
-    'rlib':         'rust',
-    'rmeta':        'rust',
-    'toml':         'rust',
-    'lock':         'rust',
-    'ron':          'rust',
+    'rs':     'rust',
+
     # Perl
-    'pl':    'perl',
-    'pm':    'perl',
-    't':     'perl',
-    'pod':   'perl',
-    'cgi':   'perl',
-    'psgi':  'perl',
-    'xs':    'perl',
-    'plx':   'perl',
+    'pl':     'perl',
+    'pm':     'perl',
+
     # Swift
-    'swift':        'swift',
-    'swiftmodule':  'swift',
-    'swiftinterface':'swift',
-    'playground':   'swift',
-    'swiftpm':      'swift',
-    'xcodeproj':    'swift',
-    'xcworkspace':  'swift',
+    'swift':  'swift',
+
+    # Miscellaneous file types
+    'json':  'json',
+
+    'csv': 'csv',
+
+    'yaml': 'yaml',
+    'yml':  'yaml',
+
+    'xml': 'xml',
+
+    'sh':    'bash',
+    'bash':  'bash',
+
+    'ps1':   'powershell',
+    'psm1':  'powershell',
+    'psd1':  'powershell',
 }
 
 load_dotenv()
 
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+pc_client = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# ---  token helpers - to make sure that the chunks of each doc aren't too big  ---------------------------------------------------------
+_MODEL            = "text-embedding-3-small"
+_MAX_MODEL_TOKENS = 8192
+_TARGET_TOKENS    = _MAX_MODEL_TOKENS // 2      # 4 096
+_enc              = tiktoken.encoding_for_model(_MODEL)
+
+def n_tokens(text: str) -> int:
+    """Exact token count for this model."""
+    return len(_enc.encode(text))
+
+def split_by_tokens(text: str, limit: int = _TARGET_TOKENS) -> list[str]:
+    """
+    Split a long string into pieces, each ≤ limit tokens.
+    Keeps line boundaries so code stays readable.
+    """
+    lines, out, cur, cur_tok = text.splitlines(), [], [], 0
+    for ln in lines:
+        ln_tok = n_tokens(ln) + 1          # +1 for the newline we lost
+        if cur_tok + ln_tok > limit and cur:
+            out.append("\n".join(cur))
+            cur, cur_tok = [ln], ln_tok
+        else:
+            cur.append(ln)
+            cur_tok += ln_tok
+    if cur:
+        out.append("\n".join(cur))
+    return out
+
+
+# ---  Pinecone db management  ---------------------------------------------------------
 def create_index(index_name: str):
-    if not pc.has_index(index_name):
-        pc.create_index(
+    if not pc_client.has_index(index_name):
+        pc_client.create_index(
             name=index_name,
-            dimension=2, # Replace with your model dimensions
+            dimension=1536, # Replace with your model dimensions
             metric="cosine", # Replace with your model metric
             spec=ServerlessSpec(
                 cloud="aws",
                 region="us-east-1"
             ) 
         )
-   
+
+def delete_index(index_name: str):
+    pc_client.delete_index(index_name)
+
+def clear_index(index_name: str):
+    try:
+        pc_client.Index(index_name).delete(delete_all=True)
+    except Exception as e:
+        print(f"Error clearing index {index_name}: {e}")
+     
+
+# ---  embedding functions  ----------------------------------------------------
 def embed_chunks(chunks: list[str]) -> list[list[float]]:
     embeddings: list[list[float]] = []
     batch_size = 100  # Gemini’s current max batch size
 
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i : i + batch_size]
-        resp = client.models.embed_content(
-            model="gemini-embedding-exp-03-07",
-            contents=batch,
-            config=types.EmbedContentConfig(
-                task_type="RETRIEVAL_DOCUMENT"
-            )
+        resp = openai_client.embeddings.create(
+            input=batch,
+            model="text-embedding-3-small"
         )
-        # extend our master list with this batch’s embeddings
-        embeddings.extend(resp.embeddings)
+
+        # Collect each vector, not flatten one of them
+        embeddings.extend([d.embedding for d in resp.data])
 
     return embeddings
-
-def embed_chunks_with_api_throttle_handling(chunks: list[str], max_retries: int = 8) -> list[list[float]]:
-    embeddings: list[list[float]] = []
-    batch_size = 100
-
-    for start in range(0, len(chunks), batch_size):
-        batch = chunks[start : start + batch_size]
-        attempt = 0
-
-        while True:
-            try:
-                resp = client.models.embed_content(
-                    model="gemini-embedding-exp-03-07",
-                    contents=batch,
-                    config=types.EmbedContentConfig(
-                        task_type="RETRIEVAL_DOCUMENT"
-                    )
-                )
-                embeddings.extend(resp.embeddings)
-                break
-
-            except ClientError as e:
-                # only back off on rate-limit errors
-                if e.code == 429 and attempt < max_retries:
-                    backoff = 2 ** attempt
-                    print(f"[embed_chunks] rate limited; retrying in {backoff}s…")
-                    time.sleep(backoff)
-                    attempt += 1
-                else:
-                    # re-raise all other errors (or if we exhaust retries)
-                    raise
-
-        # optional micro-throttle so you don’t hammer the API
-        time.sleep(0.1)
-
-    return embeddings
-
         
-def chunkify(doc: Document):
-    # 1) Grab the extension (e.g. "py", "java", etc.)
-    ext = doc.metadata.get("language", "").lower()
-    lang = suported_languages_mapped.get(ext)
+def chunkify(
+    doc: Document,
+    *,
+    min_small_lines: int = 300,
+    code_chunk_lines: int = 500,
+    code_overlap: int = 100,
+    text_chunk_lines: int = 300,
+    text_overlap: int = 40,
+    token_limit: int = _TARGET_TOKENS,     # ≈ 4 096 by default
+) -> list[str]:
+    """
+    Split one Document into token‑safe chunks ready for embedding.
 
-    # 2) If it's a supported code language, use the CodeSplitter
-    if lang:
-        splitter = CodeSplitter(
-            language=lang,           # your tree-sitter language
-            chunk_lines=200,
-            chunk_lines_overlap=40,
-        )
-        return splitter.split_text(doc.page_content)
-
-    # 3) Otherwise, fall back to plain-text splitting by lines
-    text = doc.page_content
-    lines = text.splitlines()
-    chunk_size = 200
-    overlap = 40
-
-    chunks = []
-    start = 0
-    total_lines = len(lines)
-    while start < total_lines:
-        # grab up to chunk_size lines
-        end = min(start + chunk_size, total_lines)
-        chunk = "\n".join(lines[start:end])
-        chunks.append(chunk)
-
-        # advance by chunk_size minus overlap
-        start += chunk_size - overlap
-
-    return chunks
-
-def chunkify2(doc: Document):
+    • Uses an AST‑aware splitter for known code languages.
+    • Falls back to simple line windows for everything else.
+    • Guarantees every returned chunk is ≤ token_limit tokens
+      (recursively re‑splits anything that slips through).
+    """
+    # ────────────────────────────────────────────────────────────────
+    # 0) Detect extension / language
+    # ────────────────────────────────────────────────────────────────
     ext  = doc.metadata.get("language", "").lower()
     lang = suported_languages_mapped.get(ext)
     text = doc.page_content
     lines = text.splitlines()
 
-    # 1) If it’s a small file, just keep it whole  
-    if len(lines) <= 300:
-        return [text]
+    # 1) Tiny files → single chunk
+    if len(lines) <= min_small_lines:
+        chunks = [text]
 
-    # 2) If it’s a supported code language, use the AST splitter  
-    if lang:
+    # 2) Code files → AST splitter + merge very small pieces
+    elif lang:
         splitter = CodeSplitter(
             language            = lang,
-            chunk_lines         = 500,   # up to 500 lines per chunk
-            chunk_lines_overlap = 100,   # 100 lines of overlap
+            chunk_lines         = code_chunk_lines,
+            chunk_lines_overlap = code_overlap,
         )
         raw_chunks = splitter.split_text(text)
 
-        # 3) Merge any very small chunks into their predecessor
-        merged = []
-        for chunk in raw_chunks:
-            # count lines in that chunk
-            n = chunk.count("\n") + 1
-            if n < 50 and merged:
-                # tack it onto the previous chunk
-                merged[-1] = merged[-1] + "\n" + chunk
+        # merge dangling tiny chunks (<50 lines) into their predecessor
+        chunks = []
+        for ch in raw_chunks:
+            if ch.count("\n") + 1 < 50 and chunks:
+                chunks[-1] = chunks[-1] + "\n" + ch
             else:
-                merged.append(chunk)
-        return merged
+                chunks.append(ch)
 
-    # 4) Plain-text fallback (same as before)
-    chunk_size = 300
-    overlap    =  40
-    chunks     = []
-    start      = 0
-    total      = len(lines)
+    # 3) Plain‑text fallback
+    else:
+        chunks, start, total = [], 0, len(lines)
+        while start < total:
+            end = min(start + text_chunk_lines, total)
+            chunks.append("\n".join(lines[start:end]))
+            start += text_chunk_lines - text_overlap
 
-    while start < total:
-        end   = min(start + chunk_size, total)
-        chunk = "\n".join(lines[start:end])
-        chunks.append(chunk)
-        start += chunk_size - overlap
+    # 4) FINAL PASS → enforce token budget on every chunk
+    safe_chunks: list[str] = []
+    for ch in chunks:
+        if n_tokens(ch) <= token_limit:
+            safe_chunks.append(ch)
+        else:
+            safe_chunks.extend(split_by_tokens(ch, token_limit))
 
-    return chunks
+    return safe_chunks
 
-
-def add_to_index(index_name: str, docs: list[Document]):
+# ---  adding docs to indexes  -------------------------------------------------------
+def add_to_index_for_code(index_name: str, docs: list[Document]):
     vectors = []
+    addedFilesAndChunks = "Files and chunks added:\n"
     for doc in docs:
-        #print(doc)
         prefix = doc.metadata.get("file_path", doc.metadata.get("source", "doc")).replace("/", "_")
-        #print(prefix)
         
-        chunks = chunkify2(doc)
-        print(f"{prefix}({len(chunks)}):")
-        #print(chunks)
+        chunks = chunkify(doc)
+        addedFilesAndChunks += f"{prefix}({len(chunks)} chunk(s)).\n"
+
         # generate embeddings in bulk
-        embs = embed_chunks_with_api_throttle_handling(chunks)
+        embs = embed_chunks(chunks)
         for i, (text, vector) in enumerate(zip(chunks, embs)):
             #print(text, vector)
             chunk_id = f"{prefix}-{i}"
@@ -334,8 +261,51 @@ def add_to_index(index_name: str, docs: list[Document]):
                 },
             })
 
-    # send a single upsert with all vectors
-    print(vectors)
-    pc.Index(index_name).upsert(vectors)  
+    # only upsert if there’s something to send
+    if vectors:
+        pc_client.Index(index_name).upsert(vectors)  
     
+    return f"Added:\n {addedFilesAndChunks} chunks to index {index_name}"
+    
+
+# ---  adding issues to index  -------------------------------------------------------
+def add_to_index_for_issues(index_name: str, docs: list[Document]):
+    vectors = []
+    added_issues = ""
+    
+    for doc in docs:
+        # build a “safe” prefix from author and timestamp
+        author     = doc.metadata.get("author", "unknown")
+        created_at = doc.metadata.get("created_at", "").replace(":", "-")
+        prefix     = f"{author}_{created_at}"
+        
+        # split the issue body into chunks
+        chunks = chunkify(doc)
+        
+        added_issues += f"\n{prefix} ({len(chunks)} chunk(s))"
+        
+        # embed in bulk
+        embs = embed_chunks(chunks)
+        for i, (text, vector) in enumerate(zip(chunks, embs)):
+            chunk_id = f"{prefix}-{i}"
+            vectors.append({
+                "id": chunk_id,
+                "values": vector,
+                "metadata": {
+                    "author": doc.metadata.get("author"),
+                    "created_at": doc.metadata.get("created_at"),
+                    "title": doc.metadata.get("title"),
+                    "labels": doc.metadata.get("labels"),
+                    "chunk_index": i,
+                    "embedding_text": text,
+                },
+            })
+    
+    # only upsert if there’s something to send
+    if vectors:
+        pc_client.Index(index_name).upsert(vectors)
+    
+    # build and return a summary
+    return f" added {len(vectors)} chunks across {len(docs)} issues to index '{index_name}'.\nAdded following issues: {added_issues}"
+
     

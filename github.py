@@ -12,14 +12,13 @@ def fetch_github(owner, repo, endpoint):
     url = f"https://api.github.com/repos/{owner}/{repo}/{endpoint}"
     headers = {"Authorization": f"Bearer {github_token}"}
     response = requests.get(url, headers=headers)
-
+    print(response)
     if response.status_code == 200:
         data = response.json()
     else:
         print("Failed with status code:", response.status_code)
         return []
 
-    #print(data)
     return data
 
 
