@@ -15,7 +15,7 @@ class IngestRepoToolInput(BaseModel):
 def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
     """
     Tool entrypoint: expects repo_url and branch
-    Clones, loads & splits code, then returns a human-friendly summary.
+    Description: Cleans local target folder, Clones repo, loads & splits code, then puts code chunks into an index.
     """
     target_dir = "./tmp"
     index = "documents"
@@ -46,7 +46,7 @@ class IngestIssuesToolInput(BaseModel):
 def ingest_issues_tool(owner: str, repo: str) -> str:
     """
     Tool entrypoint: expects owner and repo
-    Gets issues, loads & splits them, then loads them into the index.
+    Gets issues, chunks them, then loads chunks into an index.
     """
 
     index = "issues"
@@ -70,7 +70,7 @@ agent = create_react_agent(
 )
 
 if __name__ == "__main__":
-    user_msg = "Ingest repo and issues from with owner-leonard658, repo-CustomLearnAi and branch-main"
+    user_msg = "What tools do you have access to and what is he description for them?"#"Ingest repo and issues from with owner-leonard658, repo-CustomLearnAi and branch-main"
     response = agent.invoke({
         "messages": [{"role": "user", "content": user_msg}]
     })
