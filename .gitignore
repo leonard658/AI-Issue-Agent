@@ -1,9 +1,6 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
 *.py[cod]
 *$py.class
 
-# pycache in folders
-ingestion_agent/__pycache__/
-
-
+# Ignore every "__pycache__" directory at any depth
+__pycache__/
