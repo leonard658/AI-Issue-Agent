@@ -70,7 +70,7 @@ agent = create_react_agent(
 )
 
 if __name__ == "__main__":
-    user_msg = "What tools do you have access to and what is he description for them?"#"Ingest repo and issues from with owner-leonard658, repo-CustomLearnAi and branch-main"
+    user_msg = "Ingest repo and issues from with owner-leonard658, repo-CustomLearnAi and branch-main"
     response = agent.invoke({
         "messages": [{"role": "user", "content": user_msg}]
     })

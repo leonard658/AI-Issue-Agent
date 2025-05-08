@@ -148,12 +148,12 @@ def load_text_documents(repo_path: str) -> list[Document]:
             continue
 
         # -- 5. build the doc
-        rel_path = file_path.relative_to(root).as_posix()
+        inside = file_path.relative_to(root)             
+        rel_path = str(inside)
         docs.append(
             Document(
                 page_content=text,
                 metadata={
-                    "source": str(file_path),
                     "file_path": rel_path,
                     "language": file_path.suffix.lstrip(".") or "text",
                 },
