@@ -42,6 +42,7 @@ def query_documents_tool(
             - .metadata.id: the id of the chunk in the index
             - .metadata.score: the similarity score of this chunk to the query
             - .metadata.values: the raw embedding values (if include_values=True) This should rarely to never be used since it's not needed for most use cases.
+            - .metadata.total_chunks: total number of chunks the parent file has been split into
         - .page_content: the text of the chunk
 
     """ 
@@ -105,6 +106,7 @@ def query_issues_tool(
         - .metadata.title: the title of the issue
         - .metadata.id: the id of the issue in the index
         - .metadata.score: the similarity score of this chunk to the query
+        - .metadata.total_chunks: total number of chunks the parent issue has been split into
     - .page_content : the text body of the issue
     """
     # 1) embed the query
@@ -122,7 +124,6 @@ def query_issues_tool(
         include_metadata=True,
         include_values=include_values
     ).to_dict()
-    print(resp)
 
     # 3) build Documents
     results = []

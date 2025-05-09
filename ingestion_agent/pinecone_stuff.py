@@ -257,6 +257,7 @@ def add_to_index_for_code(index_name: str, docs: list[Document]):
                 "metadata": {
                     **doc.metadata,          # original metadata: file_path, source, language, …
                     "chunk_index": i,        # which chunk number
+                    "total_chunks": len(chunks),
                     "text": text,            # (optional) raw code snippet
                 },
             })
@@ -297,6 +298,7 @@ def add_to_index_for_issues(index_name: str, docs: list[Document]):
                     "title": doc.metadata.get("title"),
                     "labels": doc.metadata.get("labels"),
                     "chunk_index": i,
+                    "total_chunks": len(chunks),
                     "embedding_text": text,
                 },
             })
