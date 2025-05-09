@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
-from audit_tools.query_pinecone_tools import query_documents_tool, query_issues_tool
+from audit_tools.semantic_query_vdb_tools import query_documents_tool, query_issues_tool
 
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
