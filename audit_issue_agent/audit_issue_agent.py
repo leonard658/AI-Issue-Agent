@@ -3,47 +3,49 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from audit_tools.semantic_query_vdb_tools import query_issues_tool
 from audit_tools.id_query_vdb_tool import fetch_issues_tool
-from pydantic_types.issue_schema import IssueList
 
 prompt = '''
-You are an assistant that retrieves code from a vector database and prepares it for the find_issues_agent. 
-Your job is not just to fetch chunks, but to carefully curate only the code that is relevant.
+You are an assistant that retrieves issue data from a vector database and generates a high-quality report about the problem or topic provided by the user.
 
 Follow these rules strictly:
-1. Filter for Relevance
-Only consider code chunks that are directly relevant to the query/task given by the find_issues_agent.
-If a code chunk is unrelated or irrelevant, discard it.
-You are welcome to alter the top_k in the query_documents_tool input. 
-You should return somewhere between 1 and 8 documents back.
 
-2. Handle Incomplete Chunks
-If a relevant code chunk appears incomplete, you can find other chunks from the same file to reconstruct the full logic.
-Use the id field: all chunks from the same file share a common prefix (e.g., filename.ts-0, filename.ts-1).
-You also have access to a tool where you can get specific file chunks by id from the vector database.
+1. Filter for Relevance
+Only include issue entries that are directly relevant to the query/task. If an entry is unrelated or outdated for the topic at hand, discard it.
+You are welcome to alter the `top_k` in the `query_issues_tool` input.
+You should retrieve between 1 and 10 issue chunks total for optimal coverage.
+DO NOT REPORT ON ANYTHING THAT IS NOT RELATED TO THE ISSUE AT HAND.
+
+2. Prioritize Recent and High-Signal Chunks
+Issues that are more recent, recurring, or reported in multiple forms should be prioritized. Use metadata like `score`, `timestamp`, or `source` to guide this.
 
 3. Respect Token Limits
-You may only return up to 5000 tokens of code in total, leaving headroom for LLM reasoning.
-If the combined result would exceed the token limit:
-Prioritize chunks nearest the relevant chunk’s chunk_index.
-Optionally skip low-value chunks (e.g., comments, boilerplate) or summarize them.
+You may use up to 4000 tokens of source material when composing your report.
+If the combined relevant issues exceed this limit:
+- Prioritize by relevance score and recency.
+- Skip boilerplate or repetitive descriptions.
+- Summarize low-signal entries where appropriate.
 
-4. Iterate and Refine
-If the first retrieved set of chunks does not meet these standards, you can continue to query the vector DB for better results.
+4. Generate a Structured Report
+Your final output should be a structured and readable summary of the issues, organized logically.
+You may synthesize or summarize individual issue entries where necessary, but do not fabricate or speculate.
+This report should help a user quickly understand what’s going wrong and where to start resolving it.
+
+5. Iterate if Needed
+If your first result set does not meet quality expectations, you may issue new queries using more refined keywords or narrower scopes.
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
 
 agent = create_react_agent(
     model=llm,
     tools=[query_issues_tool, fetch_issues_tool],
     prompt=prompt,
-    response_format=IssueList
 )
 
 if __name__ == "__main__":
-    example_find_issues_msg = "We are working through an issue related to azure."
+    example_find_issues_msg = "We are working through an issue related to azure. The issues are held in the 'issues' index"
     response = agent.invoke({
         "messages": [{"role": "user", "content": example_find_issues_msg}]
     }, debug=True)
-    print(response["structured_response"])
+    print(response)
