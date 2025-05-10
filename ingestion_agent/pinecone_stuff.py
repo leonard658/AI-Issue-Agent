@@ -236,7 +236,7 @@ def chunkify(
     return safe_chunks
 
 # ---  adding docs to indexes  -------------------------------------------------------
-def add_to_index_for_code(index_name: str, docs: list[Document]):
+def add_to_index_for_code(index_name: str, docs: list[Document], name_space: str | None = None):
     vectors = []
     addedFilesAndChunks = "Files and chunks added:\n"
     for doc in docs:
@@ -264,13 +264,13 @@ def add_to_index_for_code(index_name: str, docs: list[Document]):
 
     # only upsert if there’s something to send
     if vectors:
-        pc_client.Index(index_name).upsert(vectors)  
+        pc_client.Index(index_name).upsert(vectors, namespace=name_space)  
     
     return f"Added:\n {addedFilesAndChunks} chunks to index {index_name}"
     
 
 # ---  adding issues to index  -------------------------------------------------------
-def add_to_index_for_issues(index_name: str, docs: list[Document]):
+def add_to_index_for_issues(index_name: str, docs: list[Document], name_space: str | None = None):
     vectors = []
     added_issues = ""
     
@@ -305,7 +305,7 @@ def add_to_index_for_issues(index_name: str, docs: list[Document]):
     
     # only upsert if there’s something to send
     if vectors:
-        pc_client.Index(index_name).upsert(vectors)
+        pc_client.Index(index_name).upsert(vectors, namespace=name_space)
     
     # build and return a summary
     return f" added {len(vectors)} chunks across {len(docs)} issues to index '{index_name}'.\nAdded following issues: {added_issues}"

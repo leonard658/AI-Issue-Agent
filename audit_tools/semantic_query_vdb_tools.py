@@ -6,6 +6,7 @@ from openai import OpenAI
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from pydantic_types.document_schema import DocumentsChunkSchema
+from pydantic_types.issue_schema import IssueChunkSchema
 
 load_dotenv()
 
@@ -18,21 +19,17 @@ class QueryDocumentsToolInput(BaseModel):
     query: str = Field(description="The natural‐language or code snippet you want to find similar docs for")
     top_k: int = Field(default=3, description="How many results to return")
     include_values: bool = Field(default=False, description="If True, returns the raw embedding values in metadata")
+    name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("query_documents_tool", args_schema=QueryDocumentsToolInput, return_direct=False)
 def query_documents_tool(
     index_name: str,
     query: str,
     top_k: int = 3,
-    include_values: bool = False
+    include_values: bool = False,
+    name_space: str | None = None
 ) -> list[DocumentsChunkSchema]:
     """
     Semantic‐search your Pinecone index of code/text chunks.
-
-    Args:
-      index_name: name of your Pinecone index (e.g. "documents")
-      query:      the natural‐language or code snippet you want to find similar docs for
-      top_k:      how many results to return
-      include_values: if True, returns the raw embedding values in metadata
 
     Returns:
       A list of LangChain Documents, each with:
@@ -60,7 +57,8 @@ def query_documents_tool(
         vector=q_vec,
         top_k=top_k,
         include_metadata=True,
-        include_values=include_values
+        include_values=include_values,
+        namespace=name_space
     )
 
     # 3) build Documents
@@ -89,13 +87,15 @@ class QueryIssuesToolInput(BaseModel):
     query: str = Field(description="The natural‐language or code snippet you want to find similar docs for")
     top_k: int = Field(default=3, description="How many results to return")
     include_values: bool = Field(default=False, description="If True, returns the raw embedding values in metadata")
+    name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("query_issues_tool", args_schema=QueryIssuesToolInput, return_direct=False)
 def query_issues_tool(
     index_name: str,
     query: str,
     top_k: int = 3,
-    include_values: bool = False
-) -> list[DocumentsChunkSchema]:
+    include_values: bool = False,
+    name_space: str | None = None
+) -> list[IssueChunkSchema]:
     """
     Semantic‐search your Pinecone index of issue‐chunks.
 
@@ -124,7 +124,8 @@ def query_issues_tool(
         vector=q_vec,
         top_k=top_k,
         include_metadata=True,
-        include_values=include_values
+        include_values=include_values,
+        namespace=name_space
     ).to_dict()
 
     # 3) build Documents
@@ -143,7 +144,5 @@ def query_issues_tool(
 
         results.append(Document(page_content=page_text, metadata=md))
 
-    return [DocumentsChunkSchema(page_content=d.page_content, metadata=d.metadata)
+    return [IssueChunkSchema(page_content=d.page_content, metadata=d.metadata)
             for d in results]
-
-

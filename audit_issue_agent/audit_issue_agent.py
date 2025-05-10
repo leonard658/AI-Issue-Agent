@@ -1,9 +1,9 @@
-# audit_code_agent.py
+# audit_issues_agent.py
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from audit_tools.semantic_query_vdb_tools import query_documents_tool
-from audit_tools.id_query_vdb_tool import fetch_documents_tool
-from pydantic_types.document_schema import DocumentList
+from audit_tools.semantic_query_vdb_tools import query_issues_tool
+from audit_tools.id_query_vdb_tool import fetch_issues_tool
+from pydantic_types.issue_schema import IssueList
 
 prompt = '''
 You are an assistant that retrieves code from a vector database and prepares it for the find_issues_agent. 
@@ -36,13 +36,13 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 agent = create_react_agent(
     model=llm,
-    tools=[query_documents_tool, fetch_documents_tool],
+    tools=[query_issues_tool, fetch_issues_tool],
     prompt=prompt,
-    response_format=DocumentList
+    response_format=IssueList
 )
 
 if __name__ == "__main__":
-    example_find_issues_msg = "We are working through an issue related to auth, please find me the relevant code documents."
+    example_find_issues_msg = "We are working through an issue related to azure."
     response = agent.invoke({
         "messages": [{"role": "user", "content": example_find_issues_msg}]
     }, debug=True)
