@@ -34,7 +34,6 @@ This report should help a user quickly understand what’s going wrong and where
 5. Iterate if Needed
 If your first result set does not meet quality expectations, you may issue new queries using more refined keywords or narrower scopes.
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
-
 '''
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
@@ -51,7 +50,7 @@ agent = create_react_agent(
 )
 
 if __name__ == "__main__":
-    example_find_issues_msg = "We are working through an issue related to azure. The issues are held in the 'issues' index"
+    example_find_issues_msg = "We are working through an issue related to azure."
     response = agent.invoke({
         "messages": [{"role": "user", "content": example_find_issues_msg}]
     }, debug=True)
