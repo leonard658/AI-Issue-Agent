@@ -1,9 +1,9 @@
 # audit_issues_agent.py
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
+from pydantic import BaseModel, Field
 from audit_tools.semantic_query_vdb_tools import query_issues_tool
 from audit_tools.id_query_vdb_tool import fetch_issues_tool
-from pydantic_types.issue_schema import IssueList
 
 prompt = '''
 You are an assistant that retrieves code from a vector database and prepares it for the find_issues_agent. 
@@ -32,13 +32,16 @@ If the first retrieved set of chunks does not meet these standards, you can cont
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+class IssueSummary(BaseModel):
+    issue_summary: str  = Field(..., description="Summary of the issues that have been looked into")
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=.8)
 
 agent = create_react_agent(
     model=llm,
     tools=[query_issues_tool, fetch_issues_tool],
     prompt=prompt,
-    response_format=IssueList
+    response_format=IssueSummary
 )
 
 if __name__ == "__main__":

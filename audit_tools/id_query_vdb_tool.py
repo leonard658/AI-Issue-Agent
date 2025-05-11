@@ -14,13 +14,11 @@ pc_client = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 # ---------- generic fetch for “documents” chunks ----------------------------
 class FetchDocumentsToolInput(BaseModel):
-    index_name: str           = Field(...,  description="Name of the Pinecone index (e.g. 'documents')")
     ids:        list[str]     = Field(...,  description="Vector IDs to fetch")
     include_values: bool      = Field(False, description="If True, embed-values are returned in metadata")
     name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("fetch_documents_tool", args_schema=FetchDocumentsToolInput, return_direct=False)
 def fetch_documents_tool(
-    index_name: str,
     ids: list[str],
     include_values: bool = False,
     name_space: str | None = None
@@ -41,6 +39,7 @@ def fetch_documents_tool(
     # ------------------------------------------------------------------
     # 1) call Pinecone
     # ------------------------------------------------------------------
+    index_name = os.getenv("DOCUMENTS_VDB_INDEX")
     idx = pc_client.Index(index_name)
     fetch_resp = idx.fetch(ids=ids, namespace=name_space)
 
@@ -80,13 +79,11 @@ def fetch_documents_tool(
 
 # ---------- identical pattern for “issues” chunks ---------------------------
 class FetchIssuesToolInput(BaseModel):
-    index_name: str           = Field(...,  description="Name of the Pinecone index (e.g. 'issues')")
     ids:        list[str]     = Field(...,  description="Vector IDs to fetch")
     include_values: bool      = Field(False, description="If True, embed-values are returned in metadata")    
     name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("fetch_issues_tool", args_schema=FetchIssuesToolInput, return_direct=False)
 def fetch_issues_tool(
-    index_name: str,
     ids: list[str],
     include_values: bool = False,
     name_space: str | None = None
@@ -107,6 +104,7 @@ def fetch_issues_tool(
     # ------------------------------------------------------------------
     # 1) call Pinecone
     # ------------------------------------------------------------------
+    index_name = os.getenv("ISSUES_VDB_INDEX")
     idx = pc_client.Index(index_name)
     fetch_resp = idx.fetch(ids=ids, namespace=name_space)
 

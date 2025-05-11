@@ -6,6 +6,10 @@ from langchain_core.tools import tool
 from ingestion_agent.github_repo_fetch import clone_repo, delete_repo, load_text_documents
 from ingestion_agent.pinecone_stuff import add_to_index_for_code, add_to_index_for_issues, clear_index
 from ingestion_agent.github_issues_fetch import fetch_github_issues
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class IngestRepoToolInput(BaseModel):
     owner: str = Field(description="Owner of the GitHub repo to clone")
@@ -18,7 +22,8 @@ def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
     Description: Cleans local target folder, Clones repo, loads & splits code, then puts code chunks into an index.
     """
     target_dir = "./tmp"
-    index = "documents"
+    index = os.getenv("DOCUMENTS_VDB_INDEX")
+
      # 0) Make sure temp repo is clean
     delete_repo(target_dir)
 
@@ -49,7 +54,7 @@ def ingest_issues_tool(owner: str, repo: str) -> str:
     Gets issues, chunks them, then loads chunks into an index.
     """
 
-    index = "issues"
+    index = os.getenv("ISSUES_VDB_INDEX")
 
     # 1) Get issues
     issues = fetch_github_issues(owner, repo)

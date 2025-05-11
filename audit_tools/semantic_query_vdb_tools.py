@@ -22,7 +22,6 @@ class QueryDocumentsToolInput(BaseModel):
     name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("query_documents_tool", args_schema=QueryDocumentsToolInput, return_direct=False)
 def query_documents_tool(
-    index_name: str,
     query: str,
     top_k: int = 3,
     include_values: bool = False,
@@ -52,6 +51,7 @@ def query_documents_tool(
     q_vec = q_resp.data[0].embedding
 
     # 2) ask Pinecone for the closest vectors
+    index_name = os.getenv("DOCUMENTS_VDB_INDEX")
     idx = pc_client.Index(index_name)
     query_response = idx.query(
         vector=q_vec,
@@ -83,14 +83,12 @@ def query_documents_tool(
 
 
 class QueryIssuesToolInput(BaseModel):
-    index_name: str = Field(description="Name of your Pinecone index to get issues from (e.g. 'documents')")
     query: str = Field(description="The natural‐language or code snippet you want to find similar docs for")
     top_k: int = Field(default=3, description="How many results to return")
     include_values: bool = Field(default=False, description="If True, returns the raw embedding values in metadata")
     name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("query_issues_tool", args_schema=QueryIssuesToolInput, return_direct=False)
 def query_issues_tool(
-    index_name: str,
     query: str,
     top_k: int = 3,
     include_values: bool = False,
@@ -119,6 +117,7 @@ def query_issues_tool(
     q_vec = q_resp.data[0].embedding
 
     # 2) query Pinecone
+    index_name = os.getenv("ISSUES_VDB_INDEX")
     idx = pc_client.Index(index_name)
     resp = idx.query(
         vector=q_vec,
