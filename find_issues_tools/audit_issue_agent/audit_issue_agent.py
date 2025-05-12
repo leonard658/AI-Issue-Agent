@@ -2,8 +2,8 @@
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
-from audit_tools.semantic_query_vdb_tools import query_issues_tool
-from audit_tools.id_query_vdb_tool import fetch_issues_tool
+from find_issues_tools.audit_tools.semantic_query_vdb_tools import query_issues_tool
+from find_issues_tools.audit_tools.id_query_vdb_tool import fetch_issues_tool
 
 prompt = '''
 You are an assistant that retrieves issue data from a vector database and generates a high-quality report about the problem or topic provided by the user.
@@ -36,7 +36,6 @@ If your first result set does not meet quality expectations, you may issue new q
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
 class IssueSummary(BaseModel):
     issue_summary: str  = Field(..., description="Summary of the issues that have been looked into")
 

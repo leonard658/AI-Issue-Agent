@@ -1,9 +1,10 @@
 # audit_code_agent.py
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from audit_tools.semantic_query_vdb_tools import query_documents_tool
-from audit_tools.id_query_vdb_tool import fetch_documents_tool
-from pydantic_types.document_schema import DocumentList
+from pydantic import BaseModel, Field
+from langchain_core.tools import tool
+from find_issues_tools.audit_tools.semantic_query_vdb_tools import query_documents_tool
+from find_issues_tools.audit_tools.id_query_vdb_tool import fetch_documents_tool
 
 prompt = '''
 You are an assistant that retrieves code from a vector database and prepares it for the find_issues_agent. 
@@ -38,12 +39,25 @@ agent = create_react_agent(
     model=llm,
     tools=[query_documents_tool, fetch_documents_tool],
     prompt=prompt,
-    response_format=DocumentList
 )
+
+class AuditCodeAgentToolInput(BaseModel):
+    query: str = Field(description="Description of the issue to generate a summary for")
+@tool("audit_code_agent_tool", args_schema=AuditCodeAgentToolInput, return_direct=False)
+def audit_code_agent_tool(query: str) -> str:
+    """
+    Get a summary of isses
+    """
+    response = agent.invoke({
+        "messages": [{"role": "user", "content": query}]
+    }, debug=False)
+    print(response["structured_response"])
 
 if __name__ == "__main__":
     example_find_issues_msg = "We are working through an issue related to auth, please find me the relevant code documents."
     response = agent.invoke({
         "messages": [{"role": "user", "content": example_find_issues_msg}]
-    }, debug=True)
-    print(response["structured_response"])
+    }, debug=False)
+    print(response)
+
+
