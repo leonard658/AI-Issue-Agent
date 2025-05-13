@@ -15,7 +15,6 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 _MODEL            = "text-embedding-3-small"
 
 class QueryDocumentsToolInput(BaseModel):
-    index_name: str = Field(description="Name of your Pinecone index to get documents from (e.g. 'documents')")
     query: str = Field(description="The natural‐language or code snippet you want to find similar docs for")
     top_k: int = Field(default=3, description="How many results to return")
     include_values: bool = Field(default=False, description="If True, returns the raw embedding values in metadata")

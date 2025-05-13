@@ -2,6 +2,7 @@
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
+from langchain_core.tools import tool
 from find_issues_tools.audit_tools.semantic_query_vdb_tools import query_issues_tool
 from find_issues_tools.audit_tools.id_query_vdb_tool import fetch_issues_tool
 
@@ -36,21 +37,29 @@ If your first result set does not meet quality expectations, you may issue new q
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-class IssueSummary(BaseModel):
-    issue_summary: str  = Field(..., description="Summary of the issues that have been looked into")
-
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=.8)
 
 agent = create_react_agent(
     model=llm,
     tools=[query_issues_tool, fetch_issues_tool],
     prompt=prompt,
-    response_format=IssueSummary
 )
 
-if __name__ == "__main__":
-    example_find_issues_msg = "We are working through an issue related to azure."
+class AuditIssueAgentToolInput(BaseModel):
+    query: str = Field(description="Description of the issue to generate a summary for / query to find relevant, currently documented issues")
+@tool("audit_issue_agent_tool", args_schema=AuditIssueAgentToolInput, return_direct=False)
+def audit_issue_agent_tool(query: str) -> str:
+    """
+    Retrieve and curate a report on the currently documented issues for any query. 
+    This can be used to see if an issue is documented sufficiently already, documented poorly or not documented at all.
+    The output from this function should be used to drive decisions on whether to continue to look into issues, document them, or any ambiguous question in between.
+    This summary provides concise, high-quality context to help analyze or resolve specific questions related to currently documented issues.
+    """
     response = agent.invoke({
-        "messages": [{"role": "user", "content": example_find_issues_msg}]
-    }, debug=True)
-    print(response)
+        "messages": [{"role": "user", "content": query}]
+    }, debug=False)
+    return response['messages'][-1].content
+
+#if __name__ == "__main__":
+    #example_find_issues_msg = "We are working through an issue related to azure."
+    #print(audit_issue_agent_tool(example_find_issues_msg))
