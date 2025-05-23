@@ -15,7 +15,7 @@ class IngestRepoToolInput(BaseModel):
     owner: str = Field(description="Owner of the GitHub repo to clone")
     repo: str = Field(description="Name of the GitHub repo to clone")
     branch: str = Field(description="Branch name of repo to clone")
-@tool("ingest_repo_tool", args_schema=IngestRepoToolInput, return_direct=False)
+#@tool("ingest_repo_tool", args_schema=IngestRepoToolInput, return_direct=False)
 def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
     """
     Tool entrypoint: expects repo_url and branch
@@ -32,7 +32,6 @@ def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
 
     # 2) Load into Document chunks
     docs = load_text_documents(target_dir)
-    #print(docs)
 
     # 3) Clear index and save vector store here
     clear_index(index)
@@ -47,7 +46,7 @@ def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
 class IngestIssuesToolInput(BaseModel):
     owner: str = Field(description="Owner of the GitHub repo to get issues from")
     repo: str = Field(description="Name of the GitHub repo to get issues from")
-@tool("ingest_issues_tool", args_schema=IngestIssuesToolInput, return_direct=False)
+#@tool("ingest_issues_tool", args_schema=IngestIssuesToolInput, return_direct=False)
 def ingest_issues_tool(owner: str, repo: str) -> str:
     """
     Tool entrypoint: expects owner and repo
@@ -65,19 +64,14 @@ def ingest_issues_tool(owner: str, repo: str) -> str:
 
     return f"Ingested issues from https://api.github.com/repos/{owner}/{repo}/issues\nAnd" + docsAdded
 
-
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-agent = create_react_agent(
-    model=llm,
-    tools=[ingest_repo_tool, ingest_issues_tool],
-    prompt="You are a helpful code-ingestion assistant."
-)
+def ingestion_agent(owner: str, repo: str, branch: str) -> str:
+    """
+    Ingestion agent that ingests code and issues from GitHub repositories.
+    """
+    repo_response = ingest_repo_tool(owner, repo, branch)
+    issues_response = ingest_issues_tool(owner, repo)
+    
+    return repo_response, issues_response
 
 if __name__ == "__main__":
-    user_msg = "Ingest repo and issues from with owner-leonard658, repo-CustomLearnAi and branch-main"
-    response = agent.invoke({
-        "messages": [{"role": "user", "content": user_msg}]
-    })
-    print(response)
-    
+   ingestion_agent('leonard658', 'CustomLearnAi', 'main')

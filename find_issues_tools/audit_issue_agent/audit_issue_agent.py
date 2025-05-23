@@ -55,6 +55,7 @@ def audit_issue_agent_tool(query: str) -> str:
     The output from this function should be used to drive decisions on whether to continue to look into issues, document them, or any ambiguous question in between.
     This summary provides concise, high-quality context to help analyze or resolve specific questions related to currently documented issues.
     """
+    
     response = agent.invoke({
         "messages": [{"role": "user", "content": query}]
     }, debug=False)
