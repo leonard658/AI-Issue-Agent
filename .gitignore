@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 *.py[cod]
 *$py.class
+.env
 
 # Ignore every "__pycache__" directory at any depth
 __pycache__/
