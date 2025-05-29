@@ -73,7 +73,7 @@ def fetch_chunks_by_prefix(
     index_name: str,
     prefix: str,
     name_space: Optional[str] = None,
-) -> list[str]:
+) -> list[DocumentsChunkSchema]:
     """
     Retrieves every ID from a Pinecone index.
     

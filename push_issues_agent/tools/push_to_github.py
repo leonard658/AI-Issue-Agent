@@ -30,6 +30,9 @@ def push_new_issue_to_github_tool(
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise RuntimeError("GITHUB_TOKEN must be set in the environment")
+    
+    # labels should always have the issue_agent unique label
+    labels.append("issue agent")
 
     url = f"https://api.github.com/repos/{slug}/issues"
     headers = {
@@ -58,14 +61,14 @@ class UpdateIssueToolInput(BaseModel):
     issue_number: int = Field(description="Issue number to update")
     title: Optional[str] = Field(None, description="New title for the issue")
     body: Optional[str] = Field(None, description="New body for the issue")
-    labels: Optional[list[str]] = Field(None, description="New labels for the issue")
+    labels: Optional[list[str]] = Field([], description="New labels for the issue")
 @tool("update_issue_on_github_tool", args_schema=UpdateIssueToolInput, return_direct=False)
 def update_issue_on_github_tool(
     slug: str,               # "owner/repo"
     issue_number: int,
     title: Optional[str] = None,
     body: Optional[str] = None,
-    labels: Optional[list[str]] = None,
+    labels: Optional[list[str]] = [],
 ) -> dict:
     """
     Update an existing GitHub issue.
@@ -81,8 +84,10 @@ def update_issue_on_github_tool(
         payload["title"] = title
     if body is not None:
         payload["body"] = body
-    if labels is not None:
-        payload["labels"] = labels
+
+    # labels should always have the issue_agent unique label
+    labels.append("issue agent")
+    payload["labels"] = labels
 
     if not payload:
         raise ValueError("At least one of title, body, or labels must be provided to update an issue")
