@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 # --- 1️⃣  define a closed schema for metadata -------------
@@ -15,7 +15,7 @@ class IssueMetadataSchema(BaseModel):
     state: Optional[str]                  = Field(None, description="State of the issue (e.g., 'open' or 'closed')")
     number: Optional[int]                 = Field(None, description="Issue number assigned by GitHub")
     slug: Optional[str]                   = Field(None, description="Slug for the issue (e.g., repo/title-based)")
-    labels: Optional[List[str]]           = Field(None, description="Labels attached to the parent issue from GitHub")
+    labels: Optional[list[str]]           = Field(None, description="Labels attached to the parent issue from GitHub")
 
     model_config = ConfigDict(extra="forbid")  # <- generates additionalProperties: false
 
@@ -26,8 +26,4 @@ class IssueChunkSchema(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-# --- 3️⃣  top-level list wrapper ----------------------------
-class IssueList(BaseModel):
-    documents: List[IssueChunkSchema]
 
-    model_config = ConfigDict(extra="forbid")

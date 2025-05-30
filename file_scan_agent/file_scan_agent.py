@@ -9,8 +9,9 @@ from file_scan_agent.tools.pull_all_index_ids import pull_all_index_ids, pull_al
 from file_scan_agent.tools.fetch_chunk import fetch_next_chunk_tool, fetch_first_chunk
 import os
 from dotenv import load_dotenv
-from find_issues_agent.find_issues_agent import run_find_issues_agent
+from find_issues_agent.broad_find_issues_agent import broad_find_issues_agent
 from pydantic_types.document_schema import DocumentList
+from pydantic_types.to_json_str import to_json_str
 
 load_dotenv()
 
@@ -65,14 +66,11 @@ def scan_all_files():
             print(f"Error: No first chunk found for prefix {cur_prefix}")
             continue
     
-        meta_dict = first_chunk.model_dump()   # or .dict() depending on your Pydantic version
-        # pretty-print the metadata as JSON:
-        meta_json = json.dumps(meta_dict, indent=2)
-
+        chunk_str = to_json_str(first_chunk)
         # build a single content string that includes instruction + metadata
         message_content = f"""
-        Here is the first chunk of a file and its metadata:
-        {meta_json}
+        Here is the first chunk of a file and its info:
+        {chunk_str}
         """
 
         # Check if the file should be scanned
@@ -90,7 +88,7 @@ def scan_all_files():
         # For each chunk, scan with the find_issues_agent
         while len(state.files_current_prefix.documents) > 0:
             cur_file = state.files_current_prefix.documents.pop()
-            response = run_find_issues_agent(cur_file)
+            response = broad_find_issues_agent(cur_file)
             
         
 

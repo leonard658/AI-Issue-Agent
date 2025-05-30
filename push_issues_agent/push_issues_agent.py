@@ -1,12 +1,12 @@
 # push_issues_agent.py
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-import json
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from push_issues_agent.tools.push_to_github import push_new_issue_to_github_tool, update_issue_on_github_tool
 from find_issues_tools.audit_tools.semantic_query_vdb_tools import query_issues_tool
-from pydantic_types.issue_schema import IssueList
+from pydantic_types.issue_schema import IssueChunkSchema
+from pydantic_types.to_json_str import to_json_str
 from typing import Optional
 
 
@@ -62,20 +62,24 @@ agent = create_react_agent(
 class PushIssueAgentInputSchema(BaseModel):
     issue_description: str = Field(description="Description of the issue to work on")
     new_issue: bool = Field(description="Whether to create new issue (True) or work on existing one (False)")
-    current_relevant_issues: Optional[IssueList] = Field(None, description="List of relevant issues")
+    current_relevant_issues: Optional[list[IssueChunkSchema]] = Field(None, description="List of relevant issues")
 @tool("push_issues_agent", args_schema=PushIssueAgentInputSchema, return_direct=False)
-def push_issues_agent(input: PushIssueAgentInputSchema) -> str:
+def push_issues_agent(issue_description: str, new_issue: bool, current_relevant_issues: Optional[list[IssueChunkSchema]] = None) -> str:
     """
     Agent that handles pushing issues to GitHub.
     """
-    input_dict = input.model_dump()   # or .dict() depending on your Pydantic version
-    # pretty-print the metadata as JSON:
-    input_json = json.dumps(input_dict, indent=2)
+    input = PushIssueAgentInputSchema(
+        issue_description=issue_description,
+        new_issue=new_issue,
+        current_relevant_issues=current_relevant_issues
+    )
+
+    input_json_str = to_json_str(input)
 
     # build a single content string that includes instruction + metadata
     message = f"""
     Here is the information about the issue at hand:
-    {input_json}
+    {input_json_str}
     """
 
     response = agent.invoke({

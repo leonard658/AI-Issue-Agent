@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 # --- 1️⃣  define a closed schema for metadata -------------
@@ -21,6 +21,6 @@ class DocumentsChunkSchema(BaseModel):
 
 # --- 3️⃣  top-level list wrapper ----------------------------
 class DocumentList(BaseModel):
-    documents: List[DocumentsChunkSchema]
+    documents: list[DocumentsChunkSchema]
 
     model_config = ConfigDict(extra="forbid")
