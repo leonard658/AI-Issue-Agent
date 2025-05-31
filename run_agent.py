@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, Tuple
 
 from langgraph.graph import StateGraph, START, END
-from ingestion_agent import ingestion_agent
+from ingestion_agent.ingestion_agent import ingestion_agent
 from file_scan_agent.file_scan_agent import scan_all_files
 import graphviz
 
