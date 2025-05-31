@@ -289,6 +289,8 @@ def add_to_index_for_issues(index_name: str, docs: list[Document], name_space: s
         embs = embed_chunks(chunks)
         for i, (text, vector) in enumerate(zip(chunks, embs)):
             chunk_id = f"{prefix}-{i}"
+            label_names = [ lbl["name"] for lbl in doc.metadata.get("labels") ]
+            print(label_names)
             vectors.append({
                 "id": chunk_id,
                 "values": vector,
@@ -301,7 +303,7 @@ def add_to_index_for_issues(index_name: str, docs: list[Document], name_space: s
                     "number":         doc.metadata.get("number"),
                     "slug":           doc.metadata.get("slug"),
                     "title":          doc.metadata.get("title"),
-                    "labels":         doc.metadata.get("labels"),
+                    "labels":         label_names,
                     "chunk_index":    i,
                     "total_chunks":   len(chunks),
                     "embedding_text": text,
