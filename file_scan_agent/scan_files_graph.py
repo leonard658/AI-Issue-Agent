@@ -107,6 +107,7 @@ def scan_node(state: ScanState) -> ScanState:
     #summary = f"Scanned {len(chunks)} chunks in {state.cur_prefix}" # broad_find_issues_agent(cur_file)
     summaries: list[str] = []
     for chunk in chunks:
+        print(f"Scanning chunk: {chunk.metadata.id}")
         summary = broad_find_issues_agent(chunk)
         summaries.append(summary)
     
