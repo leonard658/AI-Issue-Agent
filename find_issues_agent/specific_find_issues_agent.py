@@ -31,7 +31,7 @@ You are an expert software auditor, tasked with **systematically going through p
 You are methodical, objective, and prioritize clear, actionable output.
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4.1", temperature=0.2)
 
 agent = create_react_agent(
     model=llm,

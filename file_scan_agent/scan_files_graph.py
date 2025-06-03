@@ -95,10 +95,6 @@ def decision_node(state: ScanState):
     if not should_scan:
         return state.model_copy(update={"should_scan": False})
 
-    chunks = fetch_chunks_by_prefix(os.getenv("DOCUMENTS_VDB_INDEX"), cur_prefix)
-    # TODO: run your scanning logic on `chunks` here
-    summary = f"Scanned {len(chunks)} chunks in {cur_prefix}"
-
     return state.model_copy(
         update={
             "cur_prefix": cur_prefix,
@@ -108,11 +104,16 @@ def decision_node(state: ScanState):
 
 def scan_node(state: ScanState) -> ScanState:
     chunks = fetch_chunks_by_prefix(DOCS_INDEX, state.cur_prefix)
-    summary = f"Scanned {len(chunks)} chunks in {state.cur_prefix}" # broad_find_issues_agent(cur_file)
+    #summary = f"Scanned {len(chunks)} chunks in {state.cur_prefix}" # broad_find_issues_agent(cur_file)
+    summaries: list[str] = []
+    for chunk in chunks:
+        summary = broad_find_issues_agent(chunk)
+        summaries.append(summary)
+    
     return state.model_copy(
         update={
             "scanned_prefixes": state.scanned_prefixes + [state.cur_prefix],
-            "scanned_summaries":  state.scanned_summaries  + [summary],
+            "scanned_summaries":  state.scanned_summaries  + summaries,
         }
     )
 

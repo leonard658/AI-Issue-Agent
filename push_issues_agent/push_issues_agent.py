@@ -50,7 +50,7 @@ Add any other context or screenshots about the feature request here.
 
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=1)
+llm = ChatOpenAI(model="gpt-4.1", temperature=1)
 
 agent = create_react_agent(
     model=llm,

@@ -34,7 +34,7 @@ If the first retrieved set of chunks does not meet these standards, you can cont
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
 
 agent = create_react_agent(
     model=llm,
