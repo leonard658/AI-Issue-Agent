@@ -15,12 +15,10 @@ pc_client = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 # ---------- generic fetch for “documents” chunks ----------------------------
 class FetchNextChunkToolInput(BaseModel):
     id:        str   = Field(...,  description="Vector ID to fetch next chunk for") 
-    include_values: bool      = Field(False, description="If True, embed-values are returned in metadata")
     name_space: str | None = Field(default=None, description="Subgroup of the index to target")
 @tool("fetch_next_chunk_tool", args_schema=FetchNextChunkToolInput, return_direct=False)
 def fetch_next_chunk_tool(
     id: str,
-    include_values: bool = False,
     name_space: str | None = None
 ) -> DocumentsChunkSchema | None:
     """
@@ -36,6 +34,7 @@ def fetch_next_chunk_tool(
 
     .page_content holds the actual chunk text.
     """
+    include_values = False
     try:
         # ------------------------------------------------------------------
         # 1) call Pinecone

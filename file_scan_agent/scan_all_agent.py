@@ -34,6 +34,8 @@ prompt = '''
 4. Uncertain?
    Use the available tool to fetch the next chunk and re-evaluate.
 5. Output: Return `True` if the file should be scanned; otherwise `False`.
+
+Make sure that if you call the get next chunk tool, that the current file has more than 1 total_chunks
 '''
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
