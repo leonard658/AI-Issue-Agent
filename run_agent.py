@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from langgraph.graph import StateGraph, START, END
 from ingestion_agent.ingestion_agent import ingestion_agent
-from file_scan_agent.file_scan_agent import scan_all_files
+from file_scan_agent.scan_all_agent import scan_all_files
 import graphviz
 
 # assume you’ve already built & compiled your graph:

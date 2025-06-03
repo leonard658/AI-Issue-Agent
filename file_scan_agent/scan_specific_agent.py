@@ -25,20 +25,22 @@ class FileScanState(BaseModel):
     scanned_summaries: list[str]
     
 prompt = '''
-1. Input: You’ll receive the first chunk of a file.
-2. Goal: Decide whether this file needs an issue scan.
-3. Skip files that clearly do not affect system behavior (unless specifically asked for by the user), such as:
-   Dependency‐list or lock files (e.g. `package.json`, `requirements.txt`, `Pipfile.lock`).
-   Files containing only comments, headers, or documentation.
-   Pure configuration or metadata files (e.g. `.gitignore`, `README.md`).
-4. Uncertain?
-   Use the available tool to fetch the next chunk and re-evaluate.
-5. Output: Return `True` if the file should be scanned; otherwise `False`.
+1. Setup: Before scanning begins, you will receive a user‐provided filter or descriptor that defines which files to consider.
 
-IMPORTANT NOTES:
-In addition to the above instruction, you may be given further instruction by the user as to which files they want to scan.
-This could be specific file extensions, general folders/files types or files relating to a specific issue.
-Please handle these cases as dynamically as possible.
+2. Input: You’ll receive:
+   a. A user’s filter or topic description (e.g., “scan files related to X,” “only include files matching Y,” etc.).
+   b. The first chunk of a file along with its metadata.
+
+3. Goal: Decide whether this file should be scanned based on:
+   a. Whether it matches the user’s filter or descriptor (inspect filename, path, or content for relevance).
+   b. General rules to skip files that do not affect system behavior (unless specifically requested by the user), such as:
+      • Dependency or lock files (e.g., package manifests, lockfiles).  
+      • Files containing only comments, headers, or documentation.  
+      • Pure configuration or metadata files.
+
+4. If uncertain whether the file matches the user’s filter or affects behavior, use the provided tool to fetch the next chunk and re‐evaluate.
+
+5. Output: Return `True` if the file meets the user’s criteria and should be scanned; otherwise return `False`.
 '''
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
@@ -49,57 +51,6 @@ agent = create_react_agent(
     prompt=prompt,
     response_format=ShouldScan
 )
-
-def scan_all_files():
-    """
-    Scan all files in the index
-    """
-    docs_index = os.getenv("DOCUMENTS_VDB_INDEX")
-    # 1) Get starting state:
-    state = FileScanState(
-        file_prefixes_to_explore = pull_all_index_prefixes(docs_index),
-        files_current_prefix = DocumentList(documents=[]),
-        scanned_prefixes =  [],
-        scanned_summaries = []
-    )
-    #print(state)
-    
-    # 2) Loop through all prefixes
-    while len(state.file_prefixes_to_explore) > 0:
-        # Grab the next prefix
-        cur_prefix = state.file_prefixes_to_explore.pop()
-        first_chunk = fetch_first_chunk(cur_prefix)
-        if first_chunk is None:
-            print(f"Error: No first chunk found for prefix {cur_prefix}")
-            continue
-    
-        chunk_str = to_json_str(first_chunk)
-        # build a single content string that includes instruction + metadata
-        message_content = f"""
-        Here is the first chunk of a file and its info:
-        {chunk_str}
-        """
-
-        # Check if the file should be scanned
-        response = agent.invoke({
-            "messages": [{"role": "user", "content": message_content}]
-        }, debug=False)
-
-        # If it shouldnt be scanned, move on
-        if not response['structured_response'].should_scan:
-            continue
-        
-        chunks = fetch_chunks_by_prefix(docs_index,cur_prefix)
-        state.files_current_prefix.documents.extend(chunks)
-        print(f"scanning file with prefix: {cur_prefix}")
-        # For each chunk, scan with the find_issues_agent
-        while len(state.files_current_prefix.documents) > 0:
-            cur_file = state.files_current_prefix.documents.pop()
-            response = broad_find_issues_agent(cur_file)
-            state.scanned_summaries.append(response)
-            
-        return state.scanned_summaries
-
 
 def scan_specific_files():
     """
@@ -153,11 +104,4 @@ def scan_specific_files():
 
 
 
-if __name__ == "__main__":
-    scan_all_files()
-    #query = "We are working through an issue related to azure."
-    #print(len(pull_all_index_prefixes("documents")))
-    #response = agent.invoke({
-    #    "messages": [{"role": "user", "content": query}]
-    #}, debug=False)
-    #print(response)
+
