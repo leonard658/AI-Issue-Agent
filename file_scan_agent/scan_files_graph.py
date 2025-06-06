@@ -146,5 +146,5 @@ scan_files_graph = graph.compile()
 
 # Provide an initial state (filter_criteria can be empty string)
 if __name__ == "__main__":
-    final_state = scan_files_graph.invoke(ScanState(filter_criteria=""), config={"recursion_limit": 100})
+    final_state = scan_files_graph.invoke(ScanState(filter_criteria=""), config={"recursion_limit": 500})
     print("Scanned:", final_state["scanned_prefixes"])

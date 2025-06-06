@@ -8,6 +8,7 @@ from find_issues_tools.audit_issue_agent.audit_issue_agent import audit_issue_ag
 from find_issues_agent.specific_find_issues_agent import specific_find_issues_agent
 from pydantic_types.document_schema import DocumentsChunkSchema
 from pydantic_types.to_json_str import to_json_str
+from find_issues_tools.internet_search.tavily_search import basic_tavily_search
 
 
 class Summary(BaseModel):
@@ -33,6 +34,7 @@ You are an expert software auditor, tasked with **systematically finding issues 
 **Tools available for better understanding:**  
 - `audit_code_agent_tool`: for in-depth code audit and static analysis.
 - `audit_issue_agent_tool`: for granular investigation of specific issues.
+- `basic_tavily_search`: for basic internet search questions.
 
 **Only report issues you have evidence for in the current chunk. If additional context is required, clearly state what’s missing.
 For code in other chunks, you will have a chance to look at it later so don't worry about addressing issues in them right now.**
@@ -44,7 +46,7 @@ llm = ChatOpenAI(model="gpt-4.1", temperature=.5)
 
 agent = create_react_agent(
     model=llm,
-    tools=[audit_code_agent_tool, audit_issue_agent_tool, specific_find_issues_agent],
+    tools=[audit_code_agent_tool, audit_issue_agent_tool, basic_tavily_search, specific_find_issues_agent],
     prompt=prompt,
     response_format=Summary
 )
@@ -71,9 +73,9 @@ def broad_find_issues_agent(doc_chunk: DocumentsChunkSchema) -> str:
     return response['structured_response'].summary
 
 
-#if __name__ == "__main__":
-    #user_msg = "run the audit_code_agent_tool with the query 'find issues related to auth stuff'"
-    #response = agent.invoke({
-    #    "messages": [{"role": "user", "content": user_msg}]
-    #})
-    #print(response)
+if __name__ == "__main__":
+    user_msg = "just call the tavily search tool and exit"
+    response = agent.invoke({
+        "messages": [{"role": "user", "content": user_msg}]
+    })
+    print(response)

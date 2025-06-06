@@ -9,6 +9,8 @@ from pydantic_types.document_schema import DocumentsChunkSchema
 from pydantic_types.to_json_str import to_json_str
 from push_issues_agent.push_issues_agent import push_issues_agent
 from typing import Optional
+from find_issues_tools.internet_search.tavily_search import basic_tavily_search
+from find_issues_tools.internet_search.gpt_researcher import gpt_researcher_tool
 
 class Summary(BaseModel):
     summary: str = Field(description="Summary of the all the issues that have been addressed in the current chunk")
@@ -26,6 +28,8 @@ You are an expert software auditor, tasked with **systematically going through p
 **Tools available for better understanding:**  
 - `audit_code_agent_tool`: for in-depth code audit and static analysis.
 - `audit_issue_agent_tool`: for granular investigation of specific issues.
+- `basic_tavily_search`: for basic internet search questions.
+- `gpt_researcher_tool`: for in depth report generation about a topic that uses the internet.
 
 **Only push issues that are relevant to the current chunk.**
 You are methodical, objective, and prioritize clear, actionable output.
@@ -35,7 +39,7 @@ llm = ChatOpenAI(model="gpt-4.1", temperature=0.2)
 
 agent = create_react_agent(
     model=llm,
-    tools=[audit_code_agent_tool, audit_issue_agent_tool, push_issues_agent],
+    tools=[audit_code_agent_tool, audit_issue_agent_tool, basic_tavily_search, gpt_researcher_tool, push_issues_agent],
     prompt=prompt,
     response_format=Summary
 )
