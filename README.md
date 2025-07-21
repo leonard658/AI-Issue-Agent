@@ -41,6 +41,6 @@ This project implements an autonomous AI agent system designed to proactively id
     LANGSMITH_PROJECT=""
     ```
 * **Run:** tweak run_agent.py main function with your own 'owner', 'repo', and 'branch' for wha you want to audit, then run.
-* **Visualization of Agent Graph:** [Agent Graph Visualization](https://github.com/leonard658/AI-Issue-Agent/blob/main/Agent_Graph_Visualization.Agent_Graph_Visualization.png) 
+* **Visualization of Agent Graph:** [Agent Graph Visualization](https://github.com/leonard658/AI-Issue-Agent/blob/main/Agent_Graph_Visualization.png) 
 
 
