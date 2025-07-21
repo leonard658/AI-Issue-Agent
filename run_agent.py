@@ -4,9 +4,8 @@ from pydantic import BaseModel
 from typing import Optional, Tuple
 
 from langgraph.graph import StateGraph, START, END
+from file_scan_agent.scan_files_graph import run_scan_files_graph
 from ingestion_agent.ingestion_agent import ingestion_agent
-from file_scan_agent.scan_all_agent import scan_all_files
-import graphviz
 
 # assume you’ve already built & compiled your graph:
 #   graph = builder.compile()
@@ -31,24 +30,24 @@ def ingest_node(state: MainState) -> dict:
     return {"ingestion_result": (repo_msg, issues_msg)}
 
 
-def scan_node(state: MainState) -> dict:
+def scan_files_node(state: MainState) -> dict:
     """
     1) Kick off your file-scan routine.
     2) (You could return a summary here if you modify scan_all_files to return one.)
     """
-    scan_all_files()
-    return {}
+    scanned = run_scan_files_graph()
+    return scanned
 
 
 # Build the graph
 builder = StateGraph(MainState)
 builder.add_node(ingest_node)
-builder.add_node(scan_node)
+builder.add_node(scan_files_node)
 
 # Define control flow: START → ingest_node → scan_node → END
 builder.add_edge(START, ingest_node.__name__)
-builder.add_edge(ingest_node.__name__, scan_node.__name__)
-builder.add_edge(scan_node.__name__, END)
+builder.add_edge(ingest_node.__name__, scan_files_node.__name__)
+builder.add_edge(scan_files_node.__name__, END)
 
 graph = builder.compile()
 

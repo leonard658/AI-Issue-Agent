@@ -290,7 +290,6 @@ def add_to_index_for_issues(index_name: str, docs: list[Document], name_space: s
         for i, (text, vector) in enumerate(zip(chunks, embs)):
             chunk_id = f"{prefix}-{i}"
             label_names = [ lbl["name"] for lbl in doc.metadata.get("labels") ]
-            print(label_names)
             vectors.append({
                 "id": chunk_id,
                 "values": vector,

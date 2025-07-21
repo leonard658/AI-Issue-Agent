@@ -40,7 +40,7 @@ def ingest_repo_tool(owner: str, repo: str, branch: str) -> str:
     # 4) Get rid of temp repo
     delete_repo(target_dir)
 
-    return f"Ingested {len(docs)} files from https://github.com/{owner}/{repo}@{branch}\n" + docsAdded
+    return f"Ingested {len(docs)} files from branch: {branch} @ https://github.com/{owner}/{repo}\n" + docsAdded
 
 
 class IngestIssuesToolInput(BaseModel):
@@ -62,7 +62,7 @@ def ingest_issues_tool(owner: str, repo: str) -> str:
     clear_index(index)
     docsAdded = add_to_index_for_issues(index, issues)
 
-    return f"Ingested issues from https://api.github.com/repos/{owner}/{repo}/issues\nAnd" + docsAdded
+    return f"Ingested issues from https://github.com/{owner}/{repo}/issues\nAnd" + docsAdded
 
 def ingestion_agent(owner: str, repo: str, branch: str) -> str:
     """

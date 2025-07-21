@@ -43,10 +43,11 @@ prompt = '''
 
 3. Goal: Decide whether this file should be scanned based on:
    a. Whether it matches the user’s filter or descriptor (inspect filename, path, or content for relevance).
+        • This is the primary criterion for scanning. IT SHOULD BE FOLLOWED RELIGIOUSLY.
    b. General rules to skip files that do not affect system behavior (unless specifically requested by the user), such as:
-      • Dependency or lock files (e.g., package manifests, lockfiles).  
-      • Files containing only comments, headers, or documentation.  
-      • Pure configuration or metadata files.
+        • Dependency or lock files (e.g., package manifests, lockfiles).  
+        • Files containing only comments, headers, or documentation.  
+        • Pure configuration or metadata files.
 
 4. If uncertain whether the file matches the user’s filter or affects behavior, use the provided tool to fetch the next chunk and re‐evaluate.
 
@@ -57,7 +58,7 @@ Make sure that if you call the get next chunk tool, that the current file has mo
 
 llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
 
-agent = create_react_agent(
+decide_agent = create_react_agent(
     model=llm,
     tools=[fetch_next_chunk_tool],
     prompt=prompt,
@@ -88,7 +89,7 @@ def decision_node(state: ScanState):
         f"User filter/descriptor:\n{state.filter_criteria}\n\n"
         f"Here is the first chunk:\n{to_json_str(first_chunk)}"
     )
-    res = agent.invoke({"messages": [{"role": "user", "content": message_content}]})
+    res = decide_agent.invoke({"messages": [{"role": "user", "content": message_content}]})
     should_scan: bool = res["structured_response"].should_scan
 
     # 4) If skip → loop; if scan → gather chunks & update
@@ -143,6 +144,13 @@ graph.add_conditional_edges(
 )
 
 scan_files_graph = graph.compile()
+
+def run_scan_files_graph():
+    """
+    Run the scan files graph.
+    """
+    res = scan_files_graph.invoke(ScanState(), config={"recursion_limit": 500})
+    return {"scanned_prefixes": res["scanned_prefixes"]}
 
 # Provide an initial state (filter_criteria can be empty string)
 if __name__ == "__main__":
