@@ -56,7 +56,7 @@ prompt = '''
 Make sure that if you call the get next chunk tool, that the current file has more than 1 total_chunks
 '''
 
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-5-nano", temperature=1)
 
 decide_agent = create_react_agent(
     model=llm,

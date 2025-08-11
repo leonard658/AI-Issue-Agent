@@ -42,7 +42,7 @@ For code in other chunks, you will have a chance to look at it later so don't wo
 You are methodical, objective, and prioritize clear, actionable output.
 '''
 
-llm = ChatOpenAI(model="gpt-4.1", temperature=.5)
+llm = ChatOpenAI(model="gpt-5-mini", temperature=1)
 
 agent = create_react_agent(
     model=llm,

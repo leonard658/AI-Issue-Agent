@@ -37,7 +37,7 @@ If your first result set does not meet quality expectations, you may issue new q
 DO NOT QUERY THE VECTOR DATABASE MORE THAN A TOTAL OF 5 TIMES.
 '''
 
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=.8)
+llm = ChatOpenAI(model="gpt-5-mini", temperature=1)
 
 agent = create_react_agent(
     model=llm,
